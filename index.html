@@ -16,17 +16,26 @@
     body {
       font-family: 'Poppins', sans-serif;
     }
+    #pdfViewer {
+      border-radius: 1.5rem;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.3s ease;
+      transform-origin: center center;
+      display: block;
+      border: none;
+    }
   </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 min-h-screen flex flex-col items-center justify-center p-6">
-  <div class="flex flex-col md:flex-row max-w-4xl w-full gap-6">
+  <div class="flex flex-col md:flex-row max-w-[90rem] w-full gap-6">
     <!-- PDF Reader Left Panel -->
-    <section class="bg-white bg-opacity-90 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col md:w-1/2">
-      <h2 class="text-3xl font-extrabold text-indigo-700 mb-6 text-center tracking-wide select-none">
+    <section class="bg-white bg-opacity-90 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col md:flex-grow min-h-[600px]">
+      <h2 class="text-3xl font-extrabold text-indigo-700 mb-6 text-center md:text-left tracking-wide select-none">
         File Teknis Debat
       </h2>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
-        <label for="pdfInput" class="cursor-pointer w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg text-center transition duration-300 select-none">
+      <div class="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 mb-6">
+        <label for="pdfInput" class="cursor-pointer w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-3xl shadow-2xl text-center transition duration-300 select-none">
           <i class="fas fa-file-pdf mr-2"></i> Pilih File PDF
         </label>
         <input
@@ -38,26 +47,44 @@
         <button
           id="clearPdfBtn"
           disabled
-          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 select-none"
+          class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-3xl shadow-2xl transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 select-none"
           aria-label="Hapus file PDF"
         >
           <i class="fas fa-times-circle"></i> Hapus File
         </button>
       </div>
-      <div class="flex-1 border border-indigo-300 rounded-3xl overflow-hidden shadow-inner min-h-[480px]">
+      <div class="flex items-center justify-center gap-4 mb-4 select-none">
+        <button
+          id="zoomOutBtn"
+          disabled
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-5 rounded-3xl shadow-2xl transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          aria-label="Zoom Out PDF"
+          type="button"
+        >
+          <i class="fas fa-search-minus"></i> Zoom Out
+        </button>
+        <button
+          id="zoomInBtn"
+          disabled
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-5 rounded-3xl shadow-2xl transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          aria-label="Zoom In PDF"
+          type="button"
+        >
+          <i class="fas fa-search-plus"></i> Zoom In
+        </button>
+      </div>
+      <div class="flex-1 border border-indigo-300 rounded-3xl overflow-hidden shadow-inner">
         <iframe
           id="pdfViewer"
           src="https://placehold.co/600x800/png?text=Belum+ada+file+PDF+yang+dipilih"
           alt="Tampilan pembaca file PDF teknis debat, halaman kosong dengan teks 'Belum ada file PDF yang dipilih' berwarna putih di latar belakang abu-abu"
-          class="w-full h-full rounded-3xl"
-          frameborder="0"
           aria-label="Pembaca file PDF teknis debat"
         ></iframe>
       </div>
     </section>
 
     <!-- Timer Right Panel -->
-    <section class="bg-white bg-opacity-90 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col md:w-1/2 max-w-md w-full mx-auto">
+    <section class="bg-white bg-opacity-90 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col w-[320px] flex-shrink-0">
       <h1 class="text-4xl font-extrabold text-center text-indigo-700 mb-6 tracking-wide select-none">
         Timer Lomba Debat
       </h1>
@@ -102,7 +129,7 @@
 
       <div
         id="timerDisplay"
-        class="mt-10 text-center text-indigo-900 font-extrabold text-7xl select-none"
+        class="mt-10 text-center text-indigo-900 font-extrabold text-7xl select-none flex-grow flex items-center justify-center"
         aria-live="polite"
         aria-atomic="true"
       >
@@ -138,7 +165,7 @@
     </section>
   </div>
 
-  <footer class="mt-12 text-white text-center text-sm font-light select-none">
+  <footer class="mt-8 text-white text-center text-sm font-light select-none">
     &copy; 2024 Timer Lomba Debat - dibuat dengan Tailwind CSS
   </footer>
 
@@ -156,6 +183,10 @@
     let remainingSeconds = 0;
     let timerInterval = null;
     let isPaused = false;
+
+    // Preload alarm sound to avoid delay
+    const alarmAudio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+    alarmAudio.preload = 'auto';
 
     function formatTime(seconds) {
       const m = Math.floor(seconds / 60)
@@ -199,7 +230,11 @@
             timerDisplay.classList.remove('animate-pulse');
             timerDisplay.classList.add('text-green-600');
             timerDisplay.textContent = 'WAKTU HABIS!';
-            new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg').play();
+            // Play alarm immediately without delay
+            alarmAudio.currentTime = 0;
+            alarmAudio.play().catch(() => {
+              // Handle play error silently (e.g. user hasn't interacted)
+            });
           }
         }
       }, 1000);
@@ -263,11 +298,18 @@
     // Initialize display
     updateDisplay(0);
 
-    // PDF Reader script
+    // PDF Reader script with zoom
     const pdfInput = document.getElementById('pdfInput');
     const pdfViewer = document.getElementById('pdfViewer');
     const clearPdfBtn = document.getElementById('clearPdfBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
     const pdfLabel = document.querySelector('label[for="pdfInput"]');
+
+    let currentScale = 1;
+    const minScale = 0.5;
+    const maxScale = 3;
+    const scaleStep = 0.25;
 
     pdfLabel.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
@@ -282,11 +324,19 @@
         const fileURL = URL.createObjectURL(file);
         pdfViewer.src = fileURL;
         clearPdfBtn.disabled = false;
+        zoomInBtn.disabled = false;
+        zoomOutBtn.disabled = false;
+        currentScale = 1;
+        updateZoom();
       } else {
         alert('Mohon pilih file PDF yang valid.');
         pdfInput.value = '';
         pdfViewer.src = 'https://placehold.co/600x800/png?text=Belum+ada+file+PDF+yang+dipilih';
         clearPdfBtn.disabled = true;
+        zoomInBtn.disabled = true;
+        zoomOutBtn.disabled = true;
+        currentScale = 1;
+        updateZoom();
       }
     });
 
@@ -294,7 +344,31 @@
       pdfInput.value = '';
       pdfViewer.src = 'https://placehold.co/600x800/png?text=Belum+ada+file+PDF+yang+dipilih';
       clearPdfBtn.disabled = true;
+      zoomInBtn.disabled = true;
+      zoomOutBtn.disabled = true;
+      currentScale = 1;
+      updateZoom();
     });
+
+    zoomInBtn.addEventListener('click', () => {
+      if (currentScale < maxScale) {
+        currentScale = Math.min(maxScale, currentScale + scaleStep);
+        updateZoom();
+      }
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+      if (currentScale > minScale) {
+        currentScale = Math.max(minScale, currentScale - scaleStep);
+        updateZoom();
+      }
+    });
+
+    function updateZoom() {
+      pdfViewer.style.transform = `scale(${currentScale})`;
+      zoomInBtn.disabled = currentScale >= maxScale;
+      zoomOutBtn.disabled = currentScale <= minScale;
+    }
   </script>
 </body>
 </html>
